@@ -1,28 +1,7 @@
 #!/usr/bin/python
 
+import psutil, subprocess, sqlite3, sys, json
 from time import sleep, time
-import sqlite3
-import psutil, subprocess
-
-config = {
-  'php': '/usr/bin/php',
-  'sqlite_db': '../data/jobs.db',
-  'dispatch_interval': 5.0,
-  'idle_timeout': 10.0,
-  'queues': {
-    'ImportQueue': {
-      'priority': 20
-    },
-    'MailQueue': {
-      'priority': 20
-    }
-  },
-  'jobs': {
-    'test1': {
-      'src': "job1.php"
-     }
-  }
-}
 
 class Dispatcher():
   
@@ -149,5 +128,6 @@ class Dispatcher():
       sleep(self.suspend_interval)
 
 if __name__ == "__main__":
+  config = json.loads(open(sys.argv[1]).read())
   dispatcher = Dispatcher(config)
   dispatcher.run()
