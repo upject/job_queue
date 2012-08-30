@@ -3,11 +3,10 @@ class Queue {
 
   protected $name, $db;
   
-  public function __construct($name, $sqlite_db) {
+  public function __construct($name) {
     $this->name = $name;
-    $this->db = new SQLite3($sqlite_db);
+    $this->db = new SQLite3("/var/lib/job_queue/jobs.db");
     $this->db->busyTimeout(10000);
-    // TODO: check db connection
   }
   
   public function addJob($type, $data) {
@@ -28,17 +27,25 @@ class Queue {
   }
   
   public function getLast($type) {
-    $res = $this->db->query("SELECT id, state, progress, lastUpdate FROM jobs WHERE state='pending' OR state='running' ORDER BY id DESC");
+    $res = $this->db->query("SELECT id, state, progress, lastUpdate FROM jobs WHERE type='$type' ORDER BY id DESC");
     return $res->fetchArray();
   }
 }
 
 function main() {
-  $q = new Queue("ImportQueue", "../data/jobs.db");
+  $q = new Queue("ImportQueue");
   $q->addJob("test1", "Hohoho");
   $jobs = $q->getJobs();
   //var_dump($jobs);
-  var_dump($q->getLast("test1"));
+  while(true) {
+    $last = $q->getLast("test1");
+    var_dump($last);
+    if($last['state'] != 'pending' && $last['state'] != 'running') {
+      break;
+    }
+    sleep(1);
+  }
+
 }
 
 main();
