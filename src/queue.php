@@ -34,7 +34,7 @@ class Queue {
 
 function main() {
   $q = new Queue("ImportQueue");
-  $q->addJob("test1", "Hohoho");
+  $q->addJob("test1", '{"bla": 1, "blupp": 2}');
   $jobs = $q->getJobs();
   //var_dump($jobs);
   while(true) {

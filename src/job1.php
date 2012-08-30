@@ -5,19 +5,20 @@ class MyJob extends Job {
   private $interval;
   private $max_count;
   private $count;
+  private $data;
   
-  public function __construct($id, $interval, $max_count) {
+  public function __construct($id, $interval, $max_count, $data) {
     parent::__construct($id);
-    $this->interval = $interval;
+    $this->interval = $interval * 1000000;
     $this->max_count = $max_count;
+    $this->data = $data;
   }
   
   private function step() {
-    //sleep($this->interval);
-    usleep(100);
+    usleep($this->interval);
 
     ++$this->count;
-    print("job1: id = " . $this->id . ", count= " . $this->count . "\n");
+    print("job1: id = " . $this->id . ", count= " . $this->count . "data = " . var_export($this->data, true) . "\n");
     $progress = $this->count / $this->max_count;
     $this->update($progress);
   }
@@ -35,7 +36,13 @@ class MyJob extends Job {
 function main($argc, $argv) {
   if($argc > 1) {
     $id = $argv[1];
-    $j = new MyJob($id, .1, 10000);
+    $data = "";
+    if($argc > 2) {
+      print("Trying to decode: $argv[2]");
+      $data = json_decode($argv[2]);
+      var_dump($data);
+    }
+    $j = new MyJob($id, 0.1, 100, $data);
     $j->run();
   } else {
     print("Usage: job1 <id>\n");
