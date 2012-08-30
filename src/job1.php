@@ -1,60 +1,42 @@
 <?
-$db = new SQLite3("../data/jobs.db");
-$db->busyTimeout(60000);
+include_once("job.php");
 
-$max_count = 10;
-$count = 0;
-$id = 0;
-
-function step() {
-  global $count;
-  print("job1: " . $count . "\n");
-  sleep(1);
-}
-
-function update() {
-  global $db;
-  global $id;
-  global $count;
-  global $max_count;
-
-  $t = time();
-  $progress = ($count / $max_count) * 100;
-  $db->query("UPDATE jobs SET progress=$progress, lastUpdate=$t WHERE id=$id");
-}
-
-function finish() {
-  global $db;
-  global $id;
-
-  $t = time();
-  $db->query("UPDATE jobs SET state='done', lastUpdate=$t WHERE id=$id");
-}
-
-function run() {
-  global $db;
-  global $id;
-  global $count;
-  global $max_count;
+class MyJob extends Job {
+  private $interval;
+  private $max_count;
+  private $count;
   
-  $t = time();
-  $db->query("UPDATE jobs SET state='running', lastUpdate=$t WHERE id=$id");
-
-  $count = 0;
-  while($count < $max_count) {
-    ++$count;
-    step();
-    update();
+  public function __construct($id, $interval, $max_count) {
+    parent::__construct($id);
+    $this->interval = $interval;
+    $this->max_count = $max_count;
   }
-  finish();
-}
-
-function main($argc, $argv) {
-  global $id;
   
-  if($argc > 2) {
+  private function step() {
+    //sleep($this->interval);
+    usleep(100);
+
+    ++$this->count;
+    print("job1: id = " . $this->id . ", count= " . $this->count . "\n");
+    $progress = $this->count / $this->max_count;
+    $this->update($progress);
+  }
+  
+  public function run() {
+    $this->count = 0;
+    $this->start();
+    while($this->count < $this->max_count) {
+      $this->step();
+    }
+    $this->finish();
+  }
+
+}
+function main($argc, $argv) {
+  if($argc > 1) {
     $id = $argv[1];
-    run();
+    $j = new MyJob($id, .1, 10000);
+    $j->run();
   } else {
     print("Usage: job1 <id>\n");
   }
