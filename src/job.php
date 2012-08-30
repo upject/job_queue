@@ -9,6 +9,10 @@ abstract class Job {
     $this->id = $id;
   }
   
+  public function __destruct() {
+     $this->db->close();
+  }
+  
   protected function start() {
     $t = time();
     $this->db->query("UPDATE jobs SET state='running', lastUpdate=$t WHERE id=$this->id");

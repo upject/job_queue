@@ -9,6 +9,10 @@ class Queue {
     $this->db->busyTimeout(10000);
   }
   
+  public function __destruct() {
+     $this->db->close();
+  }
+  
   public function addJob($type, $data) {
     $t = time();
     $sql = "INSERT INTO jobs (type, queue, state, lastUpdate, data) VALUES ('$type', '$this->name', 'pending', $t, '$data');";

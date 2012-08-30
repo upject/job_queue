@@ -14,6 +14,10 @@ class MyJob extends Job {
     $this->data = $data;
   }
   
+  public function __destruct() {
+     parent::__destruct();
+  }
+  
   private function step() {
     usleep($this->interval);
 
