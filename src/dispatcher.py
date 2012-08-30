@@ -39,17 +39,20 @@ class Dispatcher():
 
       (id, type, data) = res
 
+      print("Spawning job: id=%d, type=%s"%(id, type))
+
       if not type in self.jobs:
         c.execute("UPDATE jobs SET state='rejected' WHERE id=?", (id,))
         continue
 
       job = self.jobs[type]
+      working_dir = job['working_dir']
       src = job['src']
       priority = self.queues[q]['priority']
   
       # spawn the process and renice the process priority
       args = [self.config['php'], src, str(id), data]
-      p = subprocess.Popen(args)  
+      p = subprocess.Popen(args, cwd=working_dir)
       process = psutil.Process(p.pid)
       process.nice = priority
       
@@ -78,12 +81,9 @@ class Dispatcher():
     # TODO: fix case where locks are present but no running process registered
     #   -> sanity
     
-    for row in res:
-      id = row[0]
-      pid = row[1]
-      state = row[2]
-      queue = str(row[3])
-      lastUpdate = row[4]
+    for id, pid, state, queue, lastUpdate in res:
+      #convert from unicode to ascii
+      queue = str(queue)
       t = time()
 
       # check if process has been finished
