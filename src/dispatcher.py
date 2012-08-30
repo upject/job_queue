@@ -123,8 +123,13 @@ class Dispatcher():
   def run(self):
     # iterate until end of world
     while(True):
-      self.check_processes()
-      self.spawn_processes()
+      try:
+        self.check_processes()
+        self.spawn_processes()
+      except Exception as err:
+        # don't stop on errors
+        print(str(err))
+        pass
       sleep(self.suspend_interval)
 
 if __name__ == "__main__":
