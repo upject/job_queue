@@ -37,11 +37,10 @@ class Queue {
   
   public function getCurrent($type) {
     $res = $this->db->query("SELECT id, state, progress, lastUpdate FROM jobs WHERE type='$type' AND (state='running' OR state='pending') ORDER BY id ASC");
-    if($res) {
-      return $res->fetchArray();
-    } else {
+    if(!$res) {
       $res = $this->db->query("SELECT id, state, progress, lastUpdate FROM jobs WHERE type='$type' AND (state not in ('running','pending')) ORDER BY id ASC");
     }
+    return $res->fetchArray();
   }
 }
 
