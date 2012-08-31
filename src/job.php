@@ -18,14 +18,19 @@ abstract class Job {
     $this->db->query("UPDATE jobs SET state='running', lastUpdate=$t WHERE id=$this->id");
   }
    
-  protected function update($progress) {
+  protected function update($progress, $message = "") {
     $t = time();
-    $this->db->query("UPDATE jobs SET progress=$progress, lastUpdate=$t WHERE id=$this->id");
+    $this->db->query("UPDATE jobs SET progress=$progress, message='$message', lastUpdate=$t WHERE id=$this->id");
   }
 
   protected function finish() {
     $t = time();
     $this->db->query("UPDATE jobs SET state='done', lastUpdate=$t WHERE id=$this->id");
+  }
+  
+  protected function error($message) {
+    $t = time();
+    $this->db->query("UPDATE jobs SET state='error', message='$message', lastUpdate=$t WHERE id=$this->id"); 
   }
   
 }
