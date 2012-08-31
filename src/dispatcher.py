@@ -66,7 +66,8 @@ class Dispatcher():
 
         c.execute("INSERT INTO processes VALUES (?, ?)", (id, p.pid))
         self.conn.commit()
-    except:
+    except Exception as err:
+      print(str(err))
       pass
     finally:
       c.close()

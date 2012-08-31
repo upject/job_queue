@@ -60,5 +60,6 @@ function main() {
 
 }
 
-main();
+if ($_SERVER["SCRIPT_FILENAME"]=="") // if not running within apache 
+  main($argc, $argv);
 ?>
