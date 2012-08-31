@@ -120,7 +120,8 @@ class Dispatcher():
             # note: this is to avoid zombie processes
             self.locks[queue].wait()
             del self.locks[queue]
-    except:
+    except Exception as err:
+      print(str(err))
       pass
     finally:
       self.conn.commit()
