@@ -34,6 +34,15 @@ class Queue {
     $res = $this->db->query("SELECT id, state, progress, lastUpdate FROM jobs WHERE type='$type' ORDER BY id DESC");
     return $res->fetchArray();
   }
+  
+  public function getCurrent($type) {
+    $res = $this->db->query("SELECT id, state, progress, lastUpdate FROM jobs WHERE type='$type' AND (state='running' OR state='pending') ORDER BY id ASC");
+    if($res) {
+      return $res->fetchArray();
+    } else {
+      $res = $this->db->query("SELECT id, state, progress, lastUpdate FROM jobs WHERE type='$type' AND (state not in ('running','pending')) ORDER BY id ASC");
+    }
+  }
 }
 
 function main() {
@@ -42,9 +51,9 @@ function main() {
   $jobs = $q->getJobs();
   //var_dump($jobs);
   while(true) {
-    $last = $q->getLast("test1");
-    var_dump($last);
-    if($last['state'] != 'pending' && $last['state'] != 'running') {
+    $current = $q->getCurrent("test1");
+    var_dump($current);
+    if($current['state'] != 'pending' && $current['state'] != 'running') {
       break;
     }
     sleep(1);
