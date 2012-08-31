@@ -4,9 +4,11 @@ abstract class Job {
   protected $db, $id;
   
   public function __construct($id) {
-    $this->db = new SQLite3("/var/lib/job_queue/jobs.db");
-    $this->db->busyTimeout(10000);
-    $this->id = $id;
+    $config = json_decode(file_get_contents("/etc/jobs.cfg"));
+    if ($config) {
+      $this->db = mysqli_connect($config->mysql->host, $config->mysql->user, $config->mysql->password, $config->mysql->db);
+      $this->id = $id;
+    }
   }
   
   public function __destruct() {
@@ -30,7 +32,7 @@ abstract class Job {
   
   protected function error($message) {
     $t = time();
-    $this->db->query("UPDATE jobs SET state='error', message='$message', lastUpdate=$t WHERE id=$this->id"); 
+    $this->db->query("UPDATE jobs SET state='failure', message='$message', lastUpdate=$t WHERE id=$this->id"); 
   }
   
 }

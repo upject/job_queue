@@ -1,6 +1,6 @@
 #!/usr/bin/python
 
-import psutil, subprocess, sqlite3, sys, json
+import psutil, subprocess, MySQLdb as mdb, sys, json
 from time import sleep, time
 
 class Dispatcher():
@@ -15,12 +15,13 @@ class Dispatcher():
 
     # only one active process per queue
     self.locks = {}
-    self.conn = self.open_db(config['sqlite_db'])
+    self.conn = self.open_db(config['mysql'])
 
-  def open_db(self, db):
-    conn = sqlite3.connect(db)
+  def open_db(self, dbconf):
+    conn = mdb.connect(dbconf['host'], dbconf['user'], dbconf['password'], dbconf['db'])
     if conn == None:
       raise RuntimeError("Could not open connection to job db")
+    print("Connected to DB")
     return conn
 
   def spawn_processes(self):
@@ -31,7 +32,7 @@ class Dispatcher():
         if q in self.locks:
           continue
 
-        c.execute("SELECT id, type, data FROM jobs WHERE queue=? and state='pending' ORDER BY id;", (q,) )
+        c.execute("SELECT id, type, data FROM jobs WHERE queue=%s and state='pending' ORDER BY id;", (q,) )
         res = c.fetchone()
       
         if res == None:
@@ -42,7 +43,7 @@ class Dispatcher():
         print("Spawning job: id=%d, type=%s"%(id, type))
 
         if not type in self.jobs:
-          c.execute("UPDATE jobs SET state='rejected' WHERE id=?", (id,))
+          c.execute("UPDATE jobs SET state='rejected' WHERE id=%d", (id,))
           continue
 
         job = self.jobs[type]
@@ -58,13 +59,13 @@ class Dispatcher():
         
         # check if process is running
         if not psutil.pid_exists(p.pid):
-          c.execute("UPDATE jobs SET state='failure' WHERE id=?", (id,))
+          c.execute("UPDATE jobs SET state='failure' WHERE id=%d", (id,))
           continue
         
         # lock the queue
         self.locks[q] = p
-
-        c.execute("INSERT INTO processes VALUES (?, ?)", (id, p.pid))
+        
+        c.execute("INSERT INTO processes VALUES (%s, %s)", (id, p.pid))
         self.conn.commit()
     except Exception as err:
       print(str(err))
@@ -95,7 +96,7 @@ class Dispatcher():
         #   - remove lock
         if state == "done":
           print("Found finished process: %d"%id)
-          c.execute("DELETE FROM processes WHERE id=?", (id,))
+          c.execute("DELETE FROM processes WHERE id=%s", (id,))
           # just make sure the php script did really terminate
           if queue in self.locks and self.locks[queue].pid == pid:
             # note: this is to avoid zombie processes
@@ -118,8 +119,8 @@ class Dispatcher():
           except:
             # remove entry even if kill was not successful
             pass
-          c.execute("UPDATE jobs SET state='killed' WHERE id=?", (id,))
-          c.execute("DELETE FROM processes WHERE id=?", (id,))
+          c.execute("UPDATE jobs SET state='killed' WHERE id=%s", (id,))
+          c.execute("DELETE FROM processes WHERE id=%s", (id,))
           if queue in self.locks and self.locks[queue].pid == pid:
             # note: this is to avoid zombie processes
             try:

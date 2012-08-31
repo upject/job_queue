@@ -5,8 +5,9 @@ class Queue {
   
   public function __construct($name) {
     $this->name = $name;
-    $this->db = new SQLite3("/var/lib/job_queue/jobs.db");
-    $this->db->busyTimeout(10000);
+    $config = json_decode(file_get_contents("/etc/jobs.cfg"));
+    if ($config)
+      $this->db = mysqli_connect($config->mysql->host, $config->mysql->user, $config->mysql->password, $config->mysql->db);
   }
   
   public function __destruct() {
@@ -16,14 +17,14 @@ class Queue {
   public function addJob($type, $data) {
     $t = time();
     $sql = "INSERT INTO jobs (type, queue, state, lastUpdate, data) VALUES ('$type', '$this->name', 'pending', $t, '$data');";
-    $this->db->exec($sql);
+    $this->db->query($sql);
   }
 
   public function getJobs() {
     $res = $this->db->query("SELECT id, type, state, progress, lastUpdate FROM jobs WHERE state='pending' OR state='running' ORDER BY id");
     $result = array();
     $idx = 0;
-    while($row = $res->fetchArray()) {
+    while($row = $res->fetch_assoc()) {
       $result[$idx] = $row;
       ++$idx;
     }
@@ -32,15 +33,15 @@ class Queue {
   
   public function getLast($type) {
     $res = $this->db->query("SELECT id, state, progress, lastUpdate FROM jobs WHERE type='$type' ORDER BY id DESC");
-    return $res->fetchArray();
+    return $res->fetch_assoc();
   }
   
   public function getCurrent($type) {
-    $res = $this->db->query("SELECT id, state, progress, lastUpdate FROM jobs WHERE type='$type' AND (state='running' OR state='pending') ORDER BY id ASC");
+    $res = $this->db->query("SELECT id, state, progress, message, lastUpdate FROM jobs WHERE type='$type' AND (state='running' OR state='pending') ORDER BY id ASC");
     if(!$res) {
-      $res = $this->db->query("SELECT id, state, progress, lastUpdate FROM jobs WHERE type='$type' AND (state not in ('running','pending')) ORDER BY id ASC");
+      $res = $this->db->query("SELECT id, state, progress, message, lastUpdate FROM jobs WHERE type='$type' AND (state not in ('running','pending')) ORDER BY id ASC");
     }
-    return $res->fetchArray();
+    return $res->fetch_assoc();
   }
 }
 

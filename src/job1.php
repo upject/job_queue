@@ -23,7 +23,7 @@ class MyJob extends Job {
 
     ++$this->count;
     print("job1: id = " . $this->id . ", count= " . $this->count . "data = " . var_export($this->data, true) . "\n");
-    $progress = $this->count / $this->max_count;
+    $progress = $this->count / $this->max_count * 100;
     $this->update($progress);
   }
   

@@ -1,8 +1,0 @@
-create table jobs(id INTEGER PRIMARY KEY ASC AUTOINCREMENT, 
-                  type TEXT, queue TEXT, 
-                  state TEXT,
-                  progress INTEGER DEFAULT 0,
-                  message TEXT,
-                  lastUpdate INTEGER, 
-                  data BLOB DEFAULT '');
-create table processes(id INTEGER PRIMARY KEY, pid INTEGER);

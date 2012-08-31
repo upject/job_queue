@@ -1,6 +1,11 @@
 {
   "php": "/usr/bin/php",
-  "sqlite_db": "/var/lib/job_queue/jobs.db",
+  "mysql": {
+    "host": "localhost",
+    "db": "jobs",
+    "user": "root",
+    "password": ""
+  },
   "dispatch_interval": 1.0,
   "idle_timeout": 10.0,
   "queues": {
