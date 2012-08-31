@@ -68,7 +68,7 @@ class Dispatcher():
         self.conn.commit()
     except Exception as err:
       print(str(err))
-      pass
+
     finally:
       c.close()
 
@@ -112,17 +112,24 @@ class Dispatcher():
         #print("...checking timestamp: %d - %d > %d?"%(t,lastUpdate,self.max_idle))
         if t-lastUpdate > self.max_idle:
           print("Killing process: %d, %d" % (id, pid))
-          p = psutil.Process(pid)
-          p.kill()
+          try:
+            p = psutil.Process(pid)
+            p.kill()
+          except:
+            # remove entry even if kill was not successful
+            pass
           c.execute("UPDATE jobs SET state='killed' WHERE id=?", (id,))
           c.execute("DELETE FROM processes WHERE id=?", (id,))
           if queue in self.locks and self.locks[queue].pid == pid:
             # note: this is to avoid zombie processes
-            self.locks[queue].wait()
+            try:
+              self.locks[queue].wait()
+            except:
+              pass
             del self.locks[queue]
     except Exception as err:
       print(str(err))
-      pass
+
     finally:
       self.conn.commit()
       c.close()
