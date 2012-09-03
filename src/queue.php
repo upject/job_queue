@@ -37,9 +37,9 @@ class Queue {
   }
   
   public function getCurrent($type) {
-    $res = $this->db->query("SELECT id, state, progress, message, lastUpdate FROM jobs WHERE type='$type' AND (state='running' OR state='pending') ORDER BY id ASC");
-    if(!$res) {
-      $res = $this->db->query("SELECT id, state, progress, message, lastUpdate FROM jobs WHERE type='$type' AND (state not in ('running','pending')) ORDER BY id ASC");
+    $res = $this->db->query("SELECT id, state, progress, message, lastUpdate FROM jobs WHERE type='$type' AND (state='running' OR state='pending') ORDER BY lastUpdate DESC");
+    if($res->num_rows <= 0) {
+      $res = $this->db->query("SELECT id, state, progress, message, lastUpdate FROM jobs WHERE type='$type' AND (state not in ('running','pending')) ORDER BY lastUpdate DESC");
     }
     return $res->fetch_assoc();
   }
