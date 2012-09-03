@@ -119,7 +119,7 @@ class Dispatcher():
           except:
             # remove entry even if kill was not successful
             pass
-          c.execute("UPDATE jobs SET state='killed' WHERE id=%s", (id,))
+          c.execute("UPDATE jobs SET state='pending' WHERE id=%s", (id,))
           c.execute("DELETE FROM processes WHERE id=%s", (id,))
           if queue in self.locks and self.locks[queue].pid == pid:
             # note: this is to avoid zombie processes
