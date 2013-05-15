@@ -32,18 +32,18 @@ class Dispatcher():
         if q in self.locks:
           continue
 
-        c.execute("SELECT id, type, data FROM jobs WHERE queue=%s and state='pending' ORDER BY id;", (q,) )
+        c.execute("SELECT id, type, context, data FROM jobs WHERE queue=%s and state='pending' ORDER BY id;", (q,) )
         res = c.fetchone()
       
         if res == None:
           continue
 
-        (id, type, data) = res
+        (id, type, context, data) = res
 
         print("Spawning job: id=%d, type=%s"%(id, type))
 
         if not type in self.jobs:
-          c.execute("UPDATE jobs SET state='rejected' WHERE id=%d", (id,))
+          c.execute("UPDATE jobs SET state='rejected' WHERE id=%s", (id,))
           continue
 
         job = self.jobs[type]
@@ -52,7 +52,7 @@ class Dispatcher():
         priority = self.queues[q]['priority']
     
         # spawn the process and renice the process priority
-        args = [self.config['php'], src, str(id), data]
+        args = [self.config['php'], src, str(id), data, context]
         p = subprocess.Popen(args, cwd=working_dir)
         process = psutil.Process(p.pid)
         process.nice = priority
